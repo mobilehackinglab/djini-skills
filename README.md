@@ -16,14 +16,15 @@ Then keep only the skill matching your subscription plan and remove the others.
 |---|:---:|:---:|:---:|
 | **Skill** | `djini-appsec` | `djini-researcher` | `djini-enterprise` |
 | App upload & scan | yes | yes | yes |
-| AppSec findings | yes | yes | yes |
+| AppSec AI SAST | yes | yes | yes |
+| AppSec AI DAST | yes | yes | yes |
+| Infra scanning (DAST) | yes | yes | yes |
 | Cline console | yes | yes | yes (unlimited) |
 | Corellium devices | yes | yes | yes |
 | Device lab | yes | yes | yes |
 | BYOD | - | yes | yes |
 | Native code analysis | - | yes | yes |
 | Deep scan (0-day) | - | - | yes |
-| Infra scanning (DAST) | - | - | yes |
 | Project sharing | - | - | yes |
 
 ## Setup
