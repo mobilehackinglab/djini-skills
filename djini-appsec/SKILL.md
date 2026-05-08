@@ -8,7 +8,7 @@ description: >
 
 # Djini AppSec Skill
 
-Djini is a mobile security platform. This skill covers the **AppSec plan** capabilities.
+Djini.AI is a mobile security platform. This skill covers the **AppSec plan** capabilities.
 
 **Included:** App upload & scan, appsec findings, Cline console, Corellium & device lab devices, web search, BYOK LLM.
 **Not included:** Native code analysis, deep scan (0-day), infrastructure scanning, BYOD, project sharing, research labs.

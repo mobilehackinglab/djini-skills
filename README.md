@@ -1,6 +1,6 @@
 # Djini Skills
 
-[Djini](https://djini.ai) is a mobile security platform with AI-powered scanning, sandbox consoles, virtual devices, and exploit research labs. These skills let external agents (Claude Code, OpenCode, etc.) interact with Djini via A2A streaming endpoints or direct REST APIs.
+[Djini.AI](https://djini.ai) is a mobile security platform with AI-powered scanning, sandbox consoles, virtual devices, and exploit research labs. These skills let external agents (Claude Code, OpenCode, etc.) interact with Djini via A2A streaming endpoints or direct REST APIs.
 
 ## Installation
 
@@ -17,7 +17,7 @@ Then keep only the skill matching your subscription plan and remove the others.
 | **Skill** | `djini-appsec` | `djini-researcher` | `djini-enterprise` |
 | App upload & scan | yes | yes | yes |
 | AppSec findings | yes | yes | yes |
-| Cline console | yes ($100) | yes ($150) | yes (unlimited) |
+| Cline console | yes | yes | yes (unlimited) |
 | Corellium devices | yes | yes | yes |
 | Device lab | yes | yes | yes |
 | BYOD | - | yes | yes |

@@ -8,7 +8,7 @@ description: >
 
 # Djini Enterprise Skill
 
-Djini is a mobile security platform. This skill covers the **Enterprise plan** capabilities.
+Djini.AI is a mobile security platform. This skill covers the **Enterprise plan** capabilities.
 
 **Included:** Everything in Researcher, plus deep scan (0-day research), infrastructure scanning (DAST), project sharing, unlimited console budget.
 **Not included:** Research labs (requires Admin/MHL role).

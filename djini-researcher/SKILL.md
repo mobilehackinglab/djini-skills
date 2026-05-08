@@ -8,9 +8,9 @@ description: >
 
 # Djini Researcher Skill
 
-Djini is a mobile security platform. This skill covers the **Researcher plan** capabilities.
+Djini.AI is a mobile security platform. This skill covers the **Researcher plan** capabilities.
 
-**Included:** Everything in AppSec, plus native code analysis (Ghidra/JNI), BYOD devices, higher console budget ($150).
+**Included:** Everything in AppSec, plus native code analysis (Ghidra/JNI), BYOD devices, higher console budget.
 **Not included:** Deep scan (0-day), infrastructure scanning, project sharing, research labs.
 
 ## Authentication
