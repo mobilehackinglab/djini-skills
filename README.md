@@ -33,7 +33,7 @@ Then keep only the skill matching your subscription plan and remove the others.
 
 2. Set environment variables:
    ```bash
-   export DJINI_CONSOLE_URL="https://your-instance.djini.ai"
+   export DJINI_CONSOLE_URL="https://app.djini.ai"
    export DJINI_API_KEY="sk-your-api-key"
    ```
 
