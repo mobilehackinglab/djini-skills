@@ -66,6 +66,15 @@ Each skill configures your agent with the endpoints, tools, and workflows availa
 - `POST /api/a2a/<project>/ask` — Project-specific with sandbox SSH + file access
 - Direct REST API is available for granular control when needed
 
+### A2A Protocol Compatibility
+
+Djini implements the [A2A protocol](https://a2a-protocol.org/) for agent discovery and communication:
+
+- **Agent Card** at `/.well-known/agent.json` — standard discovery endpoint for capabilities, skills, and auth
+- **Extended Agent Card** at `/api/a2a/agent-card` — authenticated, includes plan-specific skills
+- **SSE streaming** with structured events (`token`, `tool_end`, `answer`, `error`, `end`)
+- **Bearer token auth** as declared in the Agent Card security schemes
+
 ## Skill Structure
 
 ```
