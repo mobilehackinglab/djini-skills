@@ -123,6 +123,28 @@ with severity, `file:line` locations, evidence, and remediation. Typically finis
 **Provide the source two ways** — a public git URL *or* a source zip — then trigger the
 scan and poll. No device or Corellium/device-lab is needed.
 
+> **Required first — bring your own model (BYOK).** The AI source scan is BYOK-only: it
+> runs on **your** OpenAI-compatible model, never a djini-hosted one. Configure it once
+> (step 0); if it's missing, the trigger in step 2 returns `400 {"code": "byok_required"}`.
+
+### 0. Configure your OpenAI-compatible model (once)
+
+```bash
+curl -s -X PUT "$DJINI_CONSOLE_URL/api/user-settings/byok" \
+  -H "Authorization: Bearer $DJINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"providers":[{"provider":"openai_compatible",
+        "baseUrl":"https://openrouter.ai/api/v1",
+        "key":"sk-or-...",
+        "model":"qwen/qwen3.8-flash"}]}'
+```
+
+- `provider` must be `openai_compatible`; `baseUrl`, `key` and `model` are all required
+  (for a keyless local/self-hosted endpoint send `"key":"not-needed"`).
+- Stored per user — do it once. Verify with `GET /api/user-settings` and look for the
+  `openai_compatible` entry under `byokProviders`. The user can also set this in the UI
+  under **Settings → BYOK**, or inline in the **Scan Source Code** dialog.
+
 ### 1a. From a public git repository
 
 ```bash
@@ -189,6 +211,8 @@ curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/sarif" \
 ```
 
 Stop a running scan with `POST /api/dashboard/scans/$PROJECT_NAME/stop`.
+
+**Errors:** `400 {"code":"byok_required"}` means no OpenAI-compatible model is configured — do step 0 first. `409` means a scan is already running for that project.
 
 ---
 

@@ -8,7 +8,14 @@ A fast **white-box AI SAST** that scans source code directly — **no APK/IPA, n
 
 **Available on every plan — including Free (first 10 scans free).** See the `## AI SAST — Source-Only Scan` section in any `SKILL.md` for the full flow.
 
+> **BYOK required:** the source scan runs on **your own OpenAI-compatible model**. Configure it once (step 0 below), or the trigger returns `400 {"code":"byok_required"}`.
+
 ```bash
+# 0. Configure your model once (BYOK — OpenAI-compatible)
+curl -s -X PUT "$DJINI_CONSOLE_URL/api/user-settings/byok" \
+  -H "Authorization: Bearer $DJINI_API_KEY" -H "Content-Type: application/json" \
+  -d '{"providers":[{"provider":"openai_compatible","baseUrl":"https://openrouter.ai/api/v1","key":"sk-or-...","model":"qwen/qwen3.8-flash"}]}'
+
 # Scan a public repo end-to-end
 P=$(curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/clone-source" \
   -H "Authorization: Bearer $DJINI_API_KEY" -H "Content-Type: application/json" \
