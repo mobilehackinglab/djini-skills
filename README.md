@@ -2,11 +2,12 @@
 
 [Djini.AI](https://djini.ai) is a mobile security platform with AI-powered scanning, sandbox consoles, virtual devices, and exploit research labs. These skills let external agents (Claude Code, OpenCode, etc.) interact with Djini via A2A streaming endpoints or direct REST APIs.
 
-## ⚡ AI SAST — Source-Only Scan (fast, no binary)
+## AI SAST - Source-Only Scan (fast, no binary)
 
-A fast **white-box AI SAST** that scans source code directly — **no APK/IPA, no decompile, no device**. Point it at a **public git repo** or upload a **source zip**, and it audits all **8 OWASP MASVS categories** (STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, RESILIENCE, PRIVACY) plus a cross-cutting attack-chain pass, mapping findings to MASVS/MASWE with severity, `file:line`, evidence, and remediation. Results as JSON or SARIF (GitHub Code Scanning compatible), typically in ~1–3 minutes.
+A fast **white-box AI SAST** that scans source code directly — **no APK/IPA, no decompile, no device**. Point it at a **public git repo** or upload a **source zip**, and it audits all **8 OWASP MASVS categories** (STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, RESILIENCE, PRIVACY) plus a cross-cutting attack-chain pass, mapping findings to MASVS/MASWE with severity, `file:line`, evidence, and remediation. Results as JSON or SARIF (GitHub Code Scanning compatible), typically in ~5 minutes.
 
-**Available on every plan — including Free (first 10 scans free).** See the `## AI SAST — Source-Only Scan` section in any `SKILL.md` for the full flow.
+**Available on every plan — including Free (first 10 scans free).** 
+See the AI SAST - Source-Only Scan section in any `SKILL.md` for the full flow.
 
 > **BYOK required:** the source scan runs on **your own OpenAI-compatible model**. Configure it once (step 0 below), or the trigger returns `400 {"code":"byok_required"}`.
 
