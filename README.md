@@ -2,6 +2,23 @@
 
 [Djini.AI](https://djini.ai) is a mobile security platform with AI-powered scanning, sandbox consoles, virtual devices, and exploit research labs. These skills let external agents (Claude Code, OpenCode, etc.) interact with Djini via A2A streaming endpoints or direct REST APIs.
 
+## ⚡ AI SAST — Source-Only Scan (fast, no binary)
+
+A fast **white-box AI SAST** that scans source code directly — **no APK/IPA, no decompile, no device**. Point it at a **public git repo** or upload a **source zip**, and it audits all **8 OWASP MASVS categories** (STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, RESILIENCE, PRIVACY) plus a cross-cutting attack-chain pass, mapping findings to MASVS/MASWE with severity, `file:line`, evidence, and remediation. Results as JSON or SARIF (GitHub Code Scanning compatible), typically in ~1–3 minutes.
+
+**Available on every plan — including Free (first 10 scans free).** See the `## AI SAST — Source-Only Scan` section in any `SKILL.md` for the full flow.
+
+```bash
+# Scan a public repo end-to-end
+P=$(curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/clone-source" \
+  -H "Authorization: Bearer $DJINI_API_KEY" -H "Content-Type: application/json" \
+  -d '{"gitRepositoryUrl": "https://github.com/bitwarden/android.git"}' | jq -r .projectName)
+curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/$P/source-scan" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$P/findings" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+```
+
 ## Installation
 
 ```bash

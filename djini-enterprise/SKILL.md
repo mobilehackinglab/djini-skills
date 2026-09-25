@@ -115,6 +115,89 @@ curl -N "$DJINI_CONSOLE_URL/api/a2a/$PROJECT_NAME/ask" \
 
 ---
 
+## AI SAST — Source-Only Scan (fast, no binary)
+
+A fast, **white-box AI SAST** that scans source code directly — **no APK/IPA, no
+decompile, no device, no dynamic phase**. It covers all **8 OWASP MASVS categories**
+(STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, RESILIENCE, PRIVACY) plus a
+cross-cutting attack-chain pass, mapping every finding to a MASVS category and MASWE id
+with severity, `file:line` locations, evidence, and remediation. Typically finishes within
+5 minutes.
+
+**Availability:** every plan, **including Free** (first 10 scans free).
+
+**Provide the source two ways** — a public git URL *or* a source zip — then trigger the
+scan and poll. No device or Corellium/device-lab is needed.
+
+### 1a. From a public git repository
+
+```bash
+RESULT=$(curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/clone-source" \
+  -H "Authorization: Bearer $DJINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"gitRepositoryUrl": "https://github.com/bitwarden/android.git"}')
+PROJECT_NAME=$(echo "$RESULT" | jq -r .projectName)
+```
+
+- `gitRepositoryUrl` (**required**) — a **public** HTTPS git URL. Private repos aren't
+  supported yet and return `400` with a clear message. Blobs > 10 MB are skipped on clone.
+
+### 1b. From a source zip
+
+```bash
+RESULT=$(curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/upload-source" \
+  -H "Authorization: Bearer $DJINI_API_KEY" \
+  -F "file=@./my-app-source.zip")
+PROJECT_NAME=$(echo "$RESULT" | jq -r .projectName)
+```
+
+- `file` (**required**) — a `.zip` of the source tree. Files > 10 MB inside the zip are
+  skipped. Much faster than `/upload` (no decompile that can time out the gateway).
+
+Both return the same body — platform (Android/iOS) and package are auto-detected from the
+source:
+
+```json
+{ "success": true, "projectName": "...", "platform": "Android",
+  "packageName": "com.example.app", "appName": "...", "appVersion": "..." }
+```
+
+### 2. Trigger the scan
+
+```bash
+curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+# -> {"success": true, "message": "AI source scan started."}
+# 409 if a scan is already in progress for this project.
+```
+
+### 3. Poll status
+
+```bash
+curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/status" \
+  -H "Authorization: Bearer $DJINI_API_KEY" | jq '{status, componentStatuses}'
+```
+
+Watch `componentStatuses["AI Source Scan"]`:
+`In Progress` -> `Scanning <done>/<total> (<n> files)` -> `Completed` (or `Error`).
+Top-level `status` moves `PENDING -> IN_PROGRESS -> COMPLETED`.
+
+### 4. Get findings
+
+```bash
+# JSON (severity counts, MASVS/MASWE mapping, locations, remediation)
+curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/findings" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+
+# SARIF 2.1.0 — GitHub Code Scanning compatible (upload-sarif)
+curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/sarif" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+```
+
+Stop a running scan with `POST /api/dashboard/scans/$PROJECT_NAME/stop`.
+
+---
+
 ## Direct REST API Reference
 
 ### Upload & Scan
