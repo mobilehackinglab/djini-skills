@@ -1,9 +1,14 @@
 ---
 name: djini-researcher
 description: >
-  Use Djini.ai to run mobile security scans with native code analysis, manage
-  BYOD and Corellium devices, and interact with sandbox consoles. Researcher
-  plan: adds Ghidra/JNI analysis and BYOD. A2A streaming or direct REST. Bearer token auth.
+  Run mobile security scans with Djini.ai, including AI SAST white-box
+  source-code scanning of an Android or iOS git repository or source zip (no
+  APK/IPA or device needed) across the 8 OWASP MASVS categories, returning JSON
+  or SARIF with file:line and MASVS/MASWE mapping. Adds native code analysis
+  (Ghidra/JNI) and BYOD, plus binary scans, Corellium devices and sandbox
+  consoles. Use when asked to scan source code, run SAST or static analysis,
+  scan a repo before a PR, analyse native libraries, or produce SARIF for GitHub
+  code scanning. Researcher plan. A2A streaming or direct REST. Bearer token auth.
 ---
 
 # Djini Researcher Skill

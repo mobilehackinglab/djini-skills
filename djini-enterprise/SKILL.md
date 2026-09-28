@@ -1,9 +1,14 @@
 ---
 name: djini-enterprise
 description: >
-  Use Djini.ai for full mobile security scanning including deep scan (0-day),
-  native analysis, infrastructure scanning, and project sharing. Enterprise plan:
-  all scan features, unlimited console. A2A streaming or direct REST. Bearer token auth.
+  Full mobile security scanning with Djini.ai, including AI SAST white-box
+  source-code scanning of an Android or iOS git repository or source zip (no
+  APK/IPA or device needed) across the 8 OWASP MASVS categories, returning JSON
+  or SARIF with file:line and MASVS/MASWE mapping. Adds deep scan (0-day),
+  native analysis, infrastructure scanning and project sharing. Use when asked
+  to scan source code, run SAST or static analysis, scan a repo before a PR,
+  run a deep or 0-day scan, or produce SARIF for GitHub code scanning.
+  Enterprise plan, unlimited console. A2A streaming or direct REST. Bearer token auth.
 ---
 
 # Djini Enterprise Skill
