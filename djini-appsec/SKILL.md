@@ -1,9 +1,15 @@
 ---
 name: djini-appsec
 description: >
-  Use Djini.ai to run mobile application security scans, triage findings, and
-  interact with sandbox consoles. AppSec plan: standard scans on Corellium and
-  device lab devices. A2A streaming or direct REST. Bearer token auth.
+  Run mobile application security scans with Djini.ai. Includes AI SAST — a
+  white-box source-code scan of an Android or iOS git repository or source zip,
+  with no APK/IPA, no decompile and no device, covering all 8 OWASP MASVS
+  categories and returning findings as JSON or SARIF with file:line, MASVS/MASWE
+  mapping and remediation. Also covers binary scans on Corellium and device lab
+  devices, findings triage, and sandbox consoles. Use when asked to scan source
+  code, run SAST or static analysis, scan a repo or branch before a PR, produce
+  SARIF for GitHub code scanning, or scan a mobile app. AppSec plan. A2A
+  streaming or direct REST. Bearer token auth.
 ---
 
 # Djini AppSec Skill
