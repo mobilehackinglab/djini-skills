@@ -5,10 +5,13 @@ description: >
   white-box source-code scan of an Android or iOS git repository or source zip,
   with no APK/IPA, no decompile and no device, covering all 8 OWASP MASVS
   categories and returning findings as JSON or SARIF with file:line, MASVS/MASWE
-  mapping and remediation. Also covers binary scans on Corellium and device lab
+  mapping and remediation, plus a dependency SBOM (CycloneDX, OSV.dev CVE
+  lookup) and a proposed fix per finding — opened as GitHub issues + fix PRs via
+  the djini GitHub App. Also covers binary scans on Corellium and device lab
   devices, findings triage, and sandbox consoles. Use when asked to scan source
   code, run SAST or static analysis, scan a repo or branch before a PR, produce
-  SARIF for GitHub code scanning, or scan a mobile app. AppSec plan. A2A
+  SARIF for GitHub code scanning, generate an SBOM or check dependencies for
+  CVEs, open fix pull requests, set up djini in CI / GitHub Actions, or scan a mobile app. AppSec plan. A2A
   streaming or direct REST. Bearer token auth.
 ---
 
@@ -132,8 +135,11 @@ with severity, `file:line` locations, evidence, and remediation. Typically finis
 
 **Availability:** every plan, **including Free** (first 10 scans free).
 
-**Provide the source two ways** — a public git URL *or* a source zip — then trigger the
-scan and poll. No device or Corellium/device-lab is needed.
+**Provide the source two ways** — a git URL *or* a source zip — then trigger the scan and
+poll. No device or Corellium/device-lab is needed. Every scan also includes a
+**dependency scan (SBOM)** and a **proposed code fix per finding**; with the
+[djini GitHub App](https://github.com/apps/djini-ai-scanner) installed on a github.com
+repo, djini opens one issue + one fix pull request per finding.
 
 > **Required first — bring your own model (BYOK).** The AI source scan is BYOK-only: it
 > runs on **your** OpenAI-compatible model, never a djini-hosted one. Configure it once
@@ -157,18 +163,25 @@ curl -s -X PUT "$DJINI_CONSOLE_URL/api/user-settings/byok" \
   `openai_compatible` entry under `byokProviders`. The user can also set this in the UI
   under **Settings → BYOK**, or inline in the **Scan Source Code** dialog.
 
-### 1a. From a public git repository
+### 1a. From a git repository
 
 ```bash
 RESULT=$(curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/clone-source" \
   -H "Authorization: Bearer $DJINI_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"gitRepositoryUrl": "https://github.com/bitwarden/android.git"}')
+  -d '{"gitRepositoryUrl": "https://github.com/bitwarden/android.git", "gitRef": "main"}')
 PROJECT_NAME=$(echo "$RESULT" | jq -r .projectName)
 ```
 
-- `gitRepositoryUrl` (**required**) — a **public** HTTPS git URL. Private repos aren't
-  supported yet and return `400` with a clear message. Blobs > 10 MB are skipped on clone.
+- `gitRepositoryUrl` (**required**) — an HTTPS git URL. Public repos clone anonymously.
+  **Private github.com repos** work when the
+  [djini GitHub App](https://github.com/apps/djini-ai-scanner) is installed on them — djini
+  clones as the app, no personal token needed. Without the app a private repo returns
+  `400` with an install hint. Blobs > 10 MB are skipped on clone.
+- `gitRef` (optional) — branch, tag or commit SHA to scan (CI passes the commit being
+  built, e.g. `$GITHUB_SHA`). Defaults to the repo's default branch.
+- Scanning by URL is what enables **fix pull requests and issues** (step 6); a zip
+  upload (1b) still gets proposed fixes, as a downloadable patch.
 
 ### 1b. From a source zip
 
@@ -194,10 +207,17 @@ source:
 
 ```bash
 curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan" \
-  -H "Authorization: Bearer $DJINI_API_KEY"
+  -H "Authorization: Bearer $DJINI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"pullRequests": true, "issues": true}'
 # -> {"success": true, "message": "AI source scan started."}
 # 409 if a scan is already in progress for this project.
 ```
+
+- Body (optional, both default `true`) — controls what djini opens on GitHub when the
+  app is installed. Set `"pullRequests": false` when scanning a feature branch / PR so
+  djini reports (and opens issues) without opening fix PRs against the default branch;
+  set `"issues": false` to skip issues. Ignored for zip uploads or repos without the app.
 
 ### 3. Poll status
 
@@ -223,6 +243,88 @@ curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/sarif" \
 ```
 
 Stop a running scan with `POST /api/dashboard/scans/$PROJECT_NAME/stop`.
+
+### 5. Dependency scan (SBOM)
+
+Every source scan also builds an SBOM from the dependency manifests it finds
+(`build.gradle(.kts)`, `libs.versions.toml`, `gradle.lockfile`, `Podfile.lock`,
+`Package.resolved`, `pubspec.lock`, `package-lock.json`), looks each pinned component
+up on **OSV.dev**, and maps vulnerable components to the files that import them.
+Each vulnerable component becomes a regular finding (MASWE-0044, *Dependencies with
+Known Vulnerabilities*, `rule_id` `SBOM:<purl>:<vuln id>`), so it shows up in
+`/findings`, SARIF and the CI gate like any other finding.
+
+```bash
+# Summary: totals, by_severity, ecosystems, components (+ vulns with CVSS,
+# fixed_versions, and `usage` = the files that import each vulnerable component)
+curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan/sbom" \
+  -H "Authorization: Bearer $DJINI_API_KEY" | jq '{available, total, vulnerable, by_severity}'
+
+# CycloneDX 1.5 SBOM file (components + vulnerabilities)
+curl -s -o sbom.cdx.json \
+  "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan/sbom?download=true" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+```
+
+- `"available": false` means no supported manifest was found (`404` on `?download=true`).
+- `unchecked_ecosystems` lists ecosystems that were inventoried but not looked up on
+  OSV (e.g. CocoaPods) — those components are in the SBOM without vulnerability data.
+
+### 6. Proposed fixes, issues and pull requests
+
+Every finding comes with a proposed search/replace fix, anchored onto the scanned source.
+
+```bash
+# State + proposals: state (none|running|completed|error), edits (per-edit unified diff +
+# the finding ids it fixes), by_finding, skipped (findings without a safe fix),
+# pr (pull-request outcome) and capability (are PRs possible for this project?)
+curl -s "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan/fixes" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+
+# Download fixes as a unified diff (all, or ?edits=1,2,3) — works without GitHub
+curl -s -o fix.patch \
+  "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan/fixes/patch" \
+  -H "Authorization: Bearer $DJINI_API_KEY"
+
+# Manually open one pull request with selected edits (omit editIds for all);
+# runs in the background (202) — poll /fixes and read `pr`
+curl -s -X POST "$DJINI_CONSOLE_URL/api/dashboard/scans/$PROJECT_NAME/source-scan/fixes/pr" \
+  -H "Authorization: Bearer $DJINI_API_KEY" -H "Content-Type: application/json" \
+  -d '{"editIds": [1, 2]}'
+```
+
+**Automatic issues + PRs** happen when the project was cloned by URL from github.com
+**and** the [djini GitHub App](https://github.com/apps/djini-ai-scanner) is installed on
+that repo: djini opens one issue per finding (or small group of related findings) and
+one PR per finding/group on a `djini/…` branch whose description says `Fixes #<issue>`.
+The app never pushes to the default branch or merges anything. If `pr.state` is
+`not_installed` (or `capability.available` is false), give the user the install link (`pr.install_url`
+or `capability.installUrl`); until then the patch download still works.
+
+### Run it in CI (GitHub Actions)
+
+The app does **not** start scans by itself — a scan is started from djini or from CI.
+A ready-made pipeline lives at
+[mobilehackinglab/djini-pipeline-example](https://github.com/mobilehackinglab/djini-pipeline-example):
+copy `.github/scripts/djini-scan.sh` plus `.github/workflows/djini-android.yml` or
+`djini-ios.yml` into the repo. It clones the repo at the commit (`gitRef=$GITHUB_SHA`),
+runs the source scan, gates the build on `--fail-on <severity>`, uploads SARIF to Code
+Scanning, saves the PDF report, findings JSON and CycloneDX SBOM as a build artifact,
+and opens fix PRs on push runs (`pullRequests:false` on `pull_request` runs).
+Configure in the repo (**Settings → Secrets and variables → Actions**):
+
+| Name | Kind | Notes |
+|------|------|-------|
+| `DJINI_API_KEY` | Secret | djini API key |
+| `DJINI_BASE_URL` | Variable | e.g. `https://app.djini.ai` |
+| `DJINI_SOURCE_LLM_BASE_URL` | Variable | optional — registers the BYOK model before each scan |
+| `DJINI_SOURCE_LLM_KEY` | Secret | **required** if the other two are set (`not-needed` for keyless endpoints) — a blank key would overwrite a working BYOK key |
+| `DJINI_SOURCE_LLM_MODEL` | Variable | e.g. `qwen/qwen3.8-flash` |
+
+Skip the three `SOURCE_LLM` settings if BYOK is already configured in djini. Keep the
+workflow's job-level `if:` guard that skips `djini/…` branches and `[bot]` PRs:
+the app's fix PRs do trigger `pull_request` events and would otherwise start a new scan
+for every fix PR.
 
 **Errors:** `400 {"code":"byok_required"}` means no OpenAI-compatible model is configured — do step 0 first. `409` means a scan is already running for that project.
 
